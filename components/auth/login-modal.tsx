@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { loginWithPhoneNumber, LoginData } from "@/lib/auth"
+import { loginWithEmailAndPassword, LoginData } from "@/lib/auth"
 import { getUserProfile } from "@/lib/firestore" // Add this import
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -42,7 +42,7 @@ export function LoginModal({ isOpen, onClose, actionType, onLoginSuccess }: Logi
       }
       
       // Login with Firebase Auth
-      const userCredential = await loginWithPhoneNumber(loginData)
+      const userCredential = await loginWithEmailAndPassword(loginData)
       
       // Fetch user profile from Firestore
       try {
