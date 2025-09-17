@@ -3,13 +3,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { getUserProfile, UserProfile } from '@/lib/auth'
+import { getCustomerProfile, CustomerProfile } from '@/lib/auth'
 
 interface AuthContextType {
   user: User | null
-  userProfile: UserProfile | null
+  userProfile: CustomerProfile | null
   loading: boolean
-  setUserProfile: (profile: UserProfile | null) => void
+  setUserProfile: (profile: CustomerProfile | null) => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -29,7 +29,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<CustomerProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,12 +37,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(user)
       
       if (user) {
-        // Get user profile from Firestore
+        // Get customer profile from Firestore
         try {
-          const profile = await getUserProfile(user.uid)
+          const profile = await getCustomerProfile(user.uid)
           setUserProfile(profile)
         } catch (error) {
-          console.error('Error fetching user profile:', error)
+          console.error('Error fetching customer profile:', error)
           setUserProfile(null)
         }
       } else {

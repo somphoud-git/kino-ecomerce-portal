@@ -13,11 +13,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { loginWithPhoneNumber, LoginData } from "@/lib/auth"
+import { loginWithEmailAndPassword, LoginData } from "@/lib/auth"
+import { getUserProfile } from "@/lib/firestore" // Add this import
 import { useToast } from "@/hooks/use-toast"
 
 const loginSchema = z.object({
-  phoneNumber: z.string().min(8, "ກະລຸນາເບິ່ງເລກໂທລະສັບໃຫ້ຖືກຕ້ອງ"),
+  email: z.string().email("ກະລຸນາເບິ່ງອີເມວໃຫ້ຖືກຕ້ອງ"),
   password: z.string().min(1, "ກະລຸນາເບິ່ງລະຫັດຜ່ານ"),
 })
 
@@ -32,7 +33,7 @@ export default function LoginPage() {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      phoneNumber: "",
+      email: "",
       password: "",
     },
   })
@@ -42,12 +43,24 @@ export default function LoginPage() {
     try {
       // Prepare data for Firebase login
       const loginData: LoginData = {
-        phoneNumber: data.phoneNumber,
+        email: data.email,
         password: data.password
       }
       
-      // Login with Firebase
-      const userCredential = await loginWithPhoneNumber(loginData)
+      // Login with Firebase Auth
+      const userCredential = await loginWithEmailAndPassword(loginData)
+      
+      // Fetch user profile from Firestore
+      try {
+        const userProfile = await getUserProfile(userCredential.user.uid)
+        if (userProfile) {
+          console.log("User profile loaded:", userProfile)
+          // You can store this in context or state management if needed
+        }
+      } catch (profileError) {
+        console.warn("Could not fetch user profile:", profileError)
+        // Continue with login even if profile fetch fails
+      }
       
       toast({
         title: "ເຂົ້າສູ່ລະບົບສໍາເລັດ!",
@@ -60,7 +73,22 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Login error:", error)
       
-      const errorMessage = error instanceof Error ? error.message : "ເກີດຂໍ້ຜິດພາດໃນການເຂົ້າສູ່ລະບົບ"
+      let errorMessage = "ເກີດຂໍ້ຜິດພາດໃນການເຂົ້າສູ່ລະບົບ"
+      
+      if (error instanceof Error) {
+        // Handle specific Firebase Auth errors
+        if (error.message.includes("user-not-found")) {
+          errorMessage = "ບໍ່ພົບຜູ້ໃຊ້ນີ້ໃນລະບົບ"
+        } else if (error.message.includes("wrong-password")) {
+          errorMessage = "ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ"
+        } else if (error.message.includes("invalid-phone-number")) {
+          errorMessage = "ເລກໂທລະສັບບໍ່ຖືກຕ້ອງ"
+        } else if (error.message.includes("too-many-requests")) {
+          errorMessage = "ພະຍາຍາມເຂົ້າສູ່ລະບົບຫຼາຍເກີນໄປ ກະລຸນາລໍຖ້າ"
+        } else {
+          errorMessage = error.message
+        }
+      }
       
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
@@ -109,19 +137,19 @@ export default function LoginPage() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="phoneNumber"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel 
                           className="font-thai"
                           style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                         >
-                          ເລກໂທລະສັບ
+                          ອີເມວ
                         </FormLabel>
                         <FormControl>
                           <Input
-                            type="tel"
-                            placeholder="ເບິ່ງເລກໂທລະສັບ"
+                            type="email"
+                            placeholder="ເບິ່ງອີເມວ"
                             {...field}
                             className="font-thai"
                             style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -175,7 +203,7 @@ export default function LoginPage() {
                   <div className="space-y-4">
                     <Button
                       type="submit"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-thai"
+                      className="w-full text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-thai"
                       style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                       disabled={isLoading}
                     >

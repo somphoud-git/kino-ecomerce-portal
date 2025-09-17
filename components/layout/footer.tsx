@@ -13,7 +13,7 @@ export function Footer() {
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">O</span>
               </div>
-              <span className="text-xl font-bold">Odaplace</span>
+              <span className="text-xl font-bold">NoRacing</span>
             </div>
             <p className="text-gray-400 text-sm">
               Your trusted marketplace for premium laptops and electronics. Quality products, competitive prices, and

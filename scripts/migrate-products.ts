@@ -1,22 +1,22 @@
-import type { Laptop } from "./types"
-
 /**
- * DEPRECATED: Mock data for development only
+ * Migration Script for Products Data to Firebase
  * 
- * This file contains mock data that was used during development.
- * The application now uses Firebase Firestore for product data.
+ * This script helps migrate the existing mock data to Firebase Firestore.
+ * Run this script once to populate your Firebase products collection.
  * 
- * To migrate this data to Firebase:
- * 1. Run the migration script: scripts/migrate-products.ts
- * 2. Or use the migrateProductsToFirebase() function
- * 
- * This mock data is kept as a fallback for development purposes only.
+ * Usage:
+ * 1. Ensure Firebase is properly configured
+ * 2. Run: node scripts/migrate-products.js
+ * 3. Or call migrateProductsToFirebase() from your admin panel
  */
 
-// Fallback mock data (use only if Firebase is unavailable)
-export const mockLaptops: Laptop[] = [
+import { collection, doc, setDoc, getDocs } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import type { Laptop } from '../lib/types'
+
+// Your existing mock data
+const mockProducts: Omit<Laptop, 'id'>[] = [
   {
-    id: 1,
     name: "ZenBook Pro 14 Duo OLED UX8402, 11th Gen Intel",
     price: 1854,
     originalPrice: 2479,
@@ -35,7 +35,6 @@ export const mockLaptops: Laptop[] = [
     features: ["Dual OLED Display", "Intel i7 11th Gen", "NVIDIA RTX Graphics", "Thunderbolt 4"],
   },
   {
-    id: 2,
     name: "VivoBook S 16X OLED M5602, AMD Ryzen 5000H",
     price: 1439,
     originalPrice: 1879,
@@ -54,7 +53,6 @@ export const mockLaptops: Laptop[] = [
     features: ["16-inch OLED Display", "AMD Ryzen 5000H", "Fast SSD Storage", "All-day Battery"],
   },
   {
-    id: 3,
     name: "VivoBook 13 Slate OLED T3300, 11th Gen Intel",
     price: 575,
     originalPrice: 799,
@@ -73,7 +71,6 @@ export const mockLaptops: Laptop[] = [
     features: ["Detachable Design", "OLED Touchscreen", "Lightweight", "Windows 11"],
   },
   {
-    id: 4,
     name: "ZenBook Pro 16X OLED UX7602, 11th Gen Intel",
     price: 2237,
     originalPrice: 2849,
@@ -92,7 +89,6 @@ export const mockLaptops: Laptop[] = [
     features: ["16-inch 4K OLED", "Intel i9 Processor", "32GB RAM", "Professional Graphics"],
   },
   {
-    id: 5,
     name: "ROG Strix Scar 15 G533QS, AMD Ryzen 9",
     price: 5081,
     originalPrice: null,
@@ -111,7 +107,6 @@ export const mockLaptops: Laptop[] = [
     features: ["AMD Ryzen 9", "RTX 3080", "300Hz Display", "RGB Keyboard"],
   },
   {
-    id: 6,
     name: "VivoBook Go 14 E410 (TP1400, 11th Gen Intel)",
     price: 409,
     originalPrice: null,
@@ -130,7 +125,6 @@ export const mockLaptops: Laptop[] = [
     features: ["Lightweight Design", "All-day Battery", "Windows 11", "Affordable Price"],
   },
   {
-    id: 7,
     name: "ZenBook 14 Flip OLED UP3404, 11th Gen Intel",
     price: 1450,
     originalPrice: null,
@@ -149,7 +143,6 @@ export const mockLaptops: Laptop[] = [
     features: ["360° Flip Design", "OLED Touchscreen", "Intel i7", "Stylus Support"],
   },
   {
-    id: 8,
     name: "ProArt StudioBook 16 OLED H7600, 11th Gen Intel",
     price: 2890,
     originalPrice: null,
@@ -170,15 +163,99 @@ export const mockLaptops: Laptop[] = [
 ]
 
 /**
- * @deprecated Use Firebase products instead
- * This is kept for backward compatibility only
+ * Migrate products to Firebase Firestore
  */
-export const laptops: Laptop[] = mockLaptops
+export async function migrateProductsToFirebase(): Promise<void> {
+  try {
+    console.log('Starting product migration to Firebase...')
+    
+    // Check if products already exist
+    const existingProducts = await getDocs(collection(db, 'products'))
+    if (!existingProducts.empty) {
+      console.log(`Found ${existingProducts.size} existing products. Skipping migration.`)
+      console.log('Delete existing products first if you want to re-migrate.')
+      return
+    }
+
+    const batch = []
+    
+    for (let i = 0; i < mockProducts.length; i++) {
+      const product = mockProducts[i]
+      const productId = (i + 1).toString() // Use sequential IDs
+      
+      const productWithMetadata = {
+        ...product,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true
+      }
+      
+      // Add to Firestore
+      const docRef = doc(db, 'products', productId)
+      batch.push(setDoc(docRef, productWithMetadata))
+      
+      console.log(`Preparing product ${productId}: ${product.name}`)
+    }
+    
+    // Execute all writes
+    await Promise.all(batch)
+    
+    console.log(`✅ Successfully migrated ${mockProducts.length} products to Firebase!`)
+    console.log('Products are now available in the Firestore "products" collection.')
+    
+  } catch (error) {
+    console.error('❌ Error migrating products:', error)
+    throw error
+  }
+}
 
 /**
- * Development helper to check if we should use mock data
- * Set NEXT_PUBLIC_USE_MOCK_DATA=true in .env.local for development without Firebase
+ * Delete all products (for testing/re-migration)
  */
-export const shouldUseMockData = (): boolean => {
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true'
+export async function clearAllProducts(): Promise<void> {
+  try {
+    console.log('🗑️  Clearing all products...')
+    
+    const snapshot = await getDocs(collection(db, 'products'))
+    const deletePromises = snapshot.docs.map(doc => doc.ref.delete())
+    
+    await Promise.all(deletePromises)
+    
+    console.log(`✅ Deleted ${snapshot.size} products from Firebase`)
+  } catch (error) {
+    console.error('❌ Error clearing products:', error)
+    throw error
+  }
 }
+
+/**
+ * Sample Firebase document structure for reference:
+ * 
+ * Collection: products
+ * Document ID: 1, 2, 3, etc.
+ * Document Structure:
+ * {
+ *   name: "Product name",
+ *   price: 1000,
+ *   originalPrice: 1200, // optional
+ *   image: "/path/to/image.png",
+ *   rating: 4.5,
+ *   sold: 100,
+ *   brand: "Brand Name",
+ *   processor: "Intel i7",
+ *   ram: "16GB",
+ *   storage: "512GB SSD",
+ *   screen: "14 inch",
+ *   inStock: true,
+ *   freeShipping: true,
+ *   category: "Gaming",
+ *   description: "Product description",
+ *   features: ["Feature 1", "Feature 2"],
+ *   createdAt: Timestamp,
+ *   updatedAt: Timestamp,
+ *   isActive: true
+ * }
+ */
+
+// For development/testing - uncomment to run migration
+// migrateProductsToFirebase().catch(console.error)

@@ -5,7 +5,7 @@ import {
   User,
   UserCredential,
   AuthError
-} from 'firebase/auth'
+} from 'firebase/auth';
 import { 
   doc, 
   setDoc, 
@@ -13,11 +13,12 @@ import {
   collection, 
   query, 
   where, 
-  getDocs 
-} from 'firebase/firestore'
-import { auth, db } from './firebase'
+  getDocs,
+  serverTimestamp
+} from 'firebase/firestore';
+import { auth, db } from './firebase';
 
-export interface UserProfile {
+export interface CustomerProfile {
   uid: string
   name: string
   surname: string
@@ -27,40 +28,37 @@ export interface UserProfile {
   district: string
   province: string
   email: string
-  createdAt: Date
-  updatedAt: Date
+  userType: 'customer' // Explicitly mark as customer
+  createdAt: any // Changed to any to accommodate serverTimestamp
+  updatedAt: any // Changed to any to accommodate serverTimestamp
 }
 
 export interface RegisterData {
   name: string
   surname: string
+  email: string
   phoneNumber: string
   whatsapp?: string
   village: string
   district: string
   province: string
   password: string
-  confirmPassword: string
 }
 
 export interface LoginData {
-  phoneNumber: string
+  email: string
   password: string
 }
 
-// Create a unique email for phone number authentication
-const createEmailFromPhone = (phoneNumber: string): string => {
-  // Remove any non-digit characters and add domain
-  const cleanPhone = phoneNumber.replace(/[^\d]/g, '')
-  return `${cleanPhone}@phone.kino-ecommerce.com`
-}
-
-// Register new user with phone number
-export const registerWithPhoneNumber = async (userData: RegisterData): Promise<UserCredential> => {
+// Register new customer with email and password
+export const registerWithEmailAndPassword = async (userData: RegisterData): Promise<UserCredential> => {
   try {
-    // Check if phone number already exists
+    // Check if email already exists by trying to create user first
+    // Firebase will throw error if email exists
+    
+    // Check if phone number already exists in customers collection
     const phoneQuery = query(
-      collection(db, 'users'),
+      collection(db, 'customers'),
       where('phoneNumber', '==', userData.phoneNumber)
     )
     const phoneSnapshot = await getDocs(phoneQuery)
@@ -68,19 +66,16 @@ export const registerWithPhoneNumber = async (userData: RegisterData): Promise<U
     if (!phoneSnapshot.empty) {
       throw new Error('ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ')
     }
-
-    // Create email from phone number for Firebase Auth
-    const email = createEmailFromPhone(userData.phoneNumber)
     
     // Create user with email/password in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(
       auth, 
-      email, 
+      userData.email, 
       userData.password
     )
 
-    // Create user profile in Firestore
-    const userProfile: UserProfile = {
+    // Create customer profile in Firestore customers collection
+    const customerProfile = {
       uid: userCredential.user.uid,
       name: userData.name,
       surname: userData.surname,
@@ -89,12 +84,16 @@ export const registerWithPhoneNumber = async (userData: RegisterData): Promise<U
       village: userData.village,
       district: userData.district,
       province: userData.province,
-      email: email,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      email: userData.email,
+      userType: 'customer',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     }
 
-    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile)
+    await setDoc(doc(db, 'customers', userCredential.user.uid), customerProfile)
+
+    // Sign out the user immediately after registration to prevent auto-login
+    await signOut(auth)
 
     return userCredential
   } catch (error) {
@@ -106,16 +105,13 @@ export const registerWithPhoneNumber = async (userData: RegisterData): Promise<U
   }
 }
 
-// Login with phone number and password
-export const loginWithPhoneNumber = async (loginData: LoginData): Promise<UserCredential> => {
+// Login with email and password
+export const loginWithEmailAndPassword = async (loginData: LoginData): Promise<UserCredential> => {
   try {
-    // Create email from phone number
-    const email = createEmailFromPhone(loginData.phoneNumber)
-    
     // Sign in with email/password
     const userCredential = await signInWithEmailAndPassword(
       auth,
-      email,
+      loginData.email,
       loginData.password
     )
 
@@ -126,7 +122,7 @@ export const loginWithPhoneNumber = async (loginData: LoginData): Promise<UserCr
     
     switch (authError.code) {
       case 'auth/user-not-found':
-        throw new Error('ບໍ່ພົບຜູ້ໃຊ້ທີ່ມີເລກໂທລະສັບນີ້')
+        throw new Error('ບໍ່ພົບຜູ້ໃຊ້ທີ່ມີອີເມວນີ້')
       case 'auth/wrong-password':
         throw new Error('ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ')
       case 'auth/too-many-requests':
@@ -137,33 +133,40 @@ export const loginWithPhoneNumber = async (loginData: LoginData): Promise<UserCr
   }
 }
 
-// Get user profile
-export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+// Get customer profile
+export const getCustomerProfile = async (uid: string): Promise<CustomerProfile | null> => {
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid))
-    if (userDoc.exists()) {
-      return userDoc.data() as UserProfile
+    const customerDoc = await getDoc(doc(db, 'customers', uid))
+    if (customerDoc.exists()) {
+      return customerDoc.data() as CustomerProfile
     }
     return null
   } catch (error) {
-    console.error('Error getting user profile:', error)
+    console.error('Error getting customer profile:', error)
     return null
   }
 }
 
-// Update user profile
-export const updateUserProfile = async (uid: string, updates: Partial<UserProfile>): Promise<void> => {
+// Update customer profile
+export const updateCustomerProfile = async (uid: string, updates: Partial<CustomerProfile>): Promise<void> => {
   try {
-    const userRef = doc(db, 'users', uid)
-    await setDoc(userRef, {
+    const customerRef = doc(db, 'customers', uid)
+    await setDoc(customerRef, {
       ...updates,
       updatedAt: new Date()
     }, { merge: true })
   } catch (error) {
-    console.error('Error updating user profile:', error)
+    console.error('Error updating customer profile:', error)
     throw new Error('ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຂໍ້ມູນ')
   }
 }
+
+// Legacy function names for backward compatibility
+export const getUserProfile = getCustomerProfile
+export const updateUserProfile = updateCustomerProfile
+
+// Type alias for backward compatibility
+export type UserProfile = CustomerProfile
 
 // Logout
 export const logout = async (): Promise<void> => {

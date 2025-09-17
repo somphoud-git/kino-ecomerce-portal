@@ -67,15 +67,15 @@ export function CartDrawer({
                 <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
                   <div className="w-20 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                     <img
-                      src={item.laptop.image || "/placeholder.svg"}
-                      alt={item.laptop.name}
+                      src={item.laptop?.image || "/placeholder.svg"}
+                      alt={item.laptop?.name || "Product"}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">{item.laptop.name}</h4>
-                    <p className="text-sm text-gray-500 mb-2">{item.laptop.brand}</p>
+                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">{item.laptop?.name || "Unknown Product"}</h4>
+                    <p className="text-sm text-gray-500 mb-2">{item.laptop?.brand || "Unknown Brand"}</p>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -109,9 +109,9 @@ export function CartDrawer({
                     </div>
 
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm font-medium">${item.laptop.price.toLocaleString()}</span>
+                      <span className="text-sm font-medium">${(item.laptop?.price || 0).toLocaleString()}</span>
                       <span className="text-sm font-bold text-orange-600">
-                        ${(item.laptop.price * item.quantity).toLocaleString()}
+                        ${((item.laptop?.price || 0) * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>

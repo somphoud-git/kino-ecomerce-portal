@@ -2,7 +2,7 @@ export interface Laptop {
   id: number
   name: string
   price: number
-  originalPrice?: number
+  originalPrice?: number | null
   image: string
   rating: number
   sold: number
@@ -16,6 +16,9 @@ export interface Laptop {
   category: string
   description?: string
   features?: string[]
+  createdAt?: Date
+  updatedAt?: Date
+  isActive?: boolean
 }
 
 export interface CartItem {

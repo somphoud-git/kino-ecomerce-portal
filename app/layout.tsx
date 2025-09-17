@@ -2,13 +2,14 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { CartProvider } from '@/hooks/use-cart'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'NoRacing',
+  description: 'NoRacing - Your trusted marketplace for premium laptops and electronics.',
+  generator: 'Next.js',
 }
 
 export default function RootLayout({
@@ -29,8 +30,10 @@ html {
       </head>
       <body>
         <AuthProvider>
-          {children}
-          <Toaster />
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

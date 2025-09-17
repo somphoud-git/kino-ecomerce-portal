@@ -14,23 +14,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { registerWithPhoneNumber, RegisterData } from "@/lib/auth"
+import { registerWithEmailAndPassword, RegisterData } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 
 const registerSchema = z.object({
   name: z.string().min(2, "ກະລຸນາເບິ່ງຊື່ອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
   surname: z.string().min(2, "ກະລຸນາເບິ່ງນາມສກຸນອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
-  email: z.string().email("ກະລຸນາເບິ່ງອີເມນໃຫ້ຖືກຕ້ອງ").optional(),
-  password: z.string().min(6, "ລະຫັດຜ່ານຕ້ອງມີອຍ່າງນ້ອຍ 6 ຕົວອັກສອນ"),
-  confirmPassword: z.string(),
+  email: z.string().email("ກະລຸນາໃສ່ອີເມວໃຫ້ຖືກຕ້ອງ"),
   phoneNumber: z.string().min(8, "ເລກໂທລະສັບຕ້ອງມີອຍ່າງນ້ອຍ 8 ຫນັກ"),
+  password: z.string().min(6, "ລະຫັດຜ່ານຕ້ອງມີອຍ່າງນ້ອຍ 6 ຕົວອັກສອນ"),
   whatsapp: z.string().optional(),
   village: z.string().min(1, "ກະລຸນາເບິ່ງຊື່ສີດະບານ"),
   district: z.string().min(1, "ກະລຸນາເບິ່ງເມວງ/ແຂວງ"),
   province: z.string().min(1, "ກະລຸນາເບິ່ງແຂວງ"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "ລະຫັດຜ່ານບໍ່ຕົງກັນ",
-  path: ["confirmPassword"],
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -48,9 +44,8 @@ export default function RegisterPage() {
       name: "",
       surname: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       phoneNumber: "",
+      password: "",
       whatsapp: "",
       village: "",
       district: "",
@@ -65,30 +60,45 @@ export default function RegisterPage() {
       const registerData: RegisterData = {
         name: data.name,
         surname: data.surname,
+        email: data.email,
         phoneNumber: data.phoneNumber,
         whatsapp: data.whatsapp || undefined,
         village: data.village,
         district: data.district,
         province: data.province,
         password: data.password,
-        confirmPassword: data.confirmPassword
       }
       
-      // Register with Firebase
-      const userCredential = await registerWithPhoneNumber(registerData)
+      // Register with Firebase Auth - this creates the user account and customer profile
+      await registerWithEmailAndPassword(registerData)
       
       toast({
         title: "ສະໝັກສະມາຊິກສໍາເລັດ!",
-        description: "ພົມກັບເຂົ້າສູ່ລະບົບເພື່ອເລີ່ມຊົບປິ້ງ"
+        description: "ກະລຸນາເຂົ້າສູ່ລະບົບດ້ວຍອີເມວແລະລະຫັດຜ່ານທີ່ທ່ານສ້າງໄວ້"
       })
       
-      // Redirect to products page
-      router.push("/products")
+      // Redirect to login page so user can login with their new credentials
+      router.push("/login")
       
     } catch (error) {
       console.error("Registration error:", error)
       
-      const errorMessage = error instanceof Error ? error.message : "ເກີດຂໍ້ຜິດພາດໃນການສະໝັກສະມາຊິກ"
+      let errorMessage = "ເກີດຂໍ້ຜິດພາດໃນການສະໝັກສະມາຊິກ"
+      
+      if (error instanceof Error) {
+        // Handle specific Firebase errors
+        if (error.message.includes("email-already-in-use")) {
+          errorMessage = "ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ"
+        } else if (error.message.includes("phone-number-already-exists") || error.message.includes("ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ")) {
+          errorMessage = "ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ"
+        } else if (error.message.includes("weak-password")) {
+          errorMessage = "ລະຫັດຜ່ານອ່ອນແອເກີນໄປ"
+        } else if (error.message.includes("invalid-email")) {
+          errorMessage = "ອີເມວບໍ່ຖືກຕ້ອງ"
+        } else {
+          errorMessage = error.message
+        }
+      }
       
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
@@ -193,33 +203,68 @@ export default function RegisterPage() {
                         )}
                       />
                     </div>
+                  </div>
 
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel 
-                            className="font-thai"
-                            style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                          >
-                            ອີເມນ *
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="ເບິ່ງອີເມນ"
-                              {...field}
+                  {/* Contact Information */}
+                  <div className="space-y-4">
+                    <h3 
+                      className="text-lg font-semibold text-gray-900 font-thai"
+                      style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
+                    >
+                      ຂໍ້ມູນຕິດຕໍ່
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel 
                               className="font-thai"
                               style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                            />
-                          </FormControl>
-                          <FormMessage className="font-thai" />
-                        </FormItem>
-                      )}
-                    />
+                            >
+                              ອີເມວ *
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="ເບິ່ງອີເມວ"
+                                {...field}
+                                className="font-thai"
+                                style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
+                              />
+                            </FormControl>
+                            <FormMessage className="font-thai" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel 
+                              className="font-thai"
+                              style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
+                            >
+                              ເລກໂທລະສັບ *
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="tel"
+                                placeholder="ເບິ່ງເລກໂທລະສັບ"
+                                {...field}
+                                className="font-thai"
+                                style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
+                              />
+                            </FormControl>
+                            <FormMessage className="font-thai" />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="password"
@@ -254,83 +299,6 @@ export default function RegisterPage() {
                                   )}
                                 </Button>
                               </div>
-                            </FormControl>
-                            <FormMessage className="font-thai" />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel 
-                              className="font-thai"
-                              style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                            >
-                              ຢືນຍັນລະຫັດຜ່ານ *
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input
-                                  type={showConfirmPassword ? "text" : "password"}
-                                  placeholder="ยืนยันรหัสผ่าน"
-                                  {...field}
-                                  className="pr-10 font-thai"
-                                  style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                >
-                                  {showConfirmPassword ? (
-                                    <EyeOff className="w-4 h-4 text-gray-500" />
-                                  ) : (
-                                    <Eye className="w-4 h-4 text-gray-500" />
-                                  )}
-                                </Button>
-                              </div>
-                            </FormControl>
-                            <FormMessage className="font-thai" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="space-y-4">
-                    <h3 
-                      className="text-lg font-semibold text-gray-900 font-thai"
-                      style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                    >
-                      ຂໍ້ມູນຕິດຕໍ່
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="phoneNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel 
-                              className="font-thai"
-                              style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                            >
-                              ເລກໂທລະສັບ *
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="tel"
-                                placeholder="ເບິ່ງເລກໂທລະສັບ"
-                                {...field}
-                                className="font-thai"
-                                style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                              />
                             </FormControl>
                             <FormMessage className="font-thai" />
                           </FormItem>
