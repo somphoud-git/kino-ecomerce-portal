@@ -18,8 +18,8 @@ import { getUserProfile } from "@/lib/firestore" // Add this import
 import { useToast } from "@/hooks/use-toast"
 
 const loginSchema = z.object({
-  email: z.string().email("ກະລຸນາເບິ່ງອີເມວໃຫ້ຖືກຕ້ອງ"),
-  password: z.string().min(1, "ກະລຸນາເບິ່ງລະຫັດຜ່ານ"),
+  email: z.string().email("ກາລຸນາກວດສອບອີເມວ"),
+  password: z.string().min(1, "ກາລະນາກວດສອບລະຫັດຜ່ານ"),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -64,7 +64,8 @@ export default function LoginPage() {
       
       toast({
         title: "ເຂົ້າສູ່ລະບົບສໍາເລັດ!",
-        description: "ຍິນດີຕ້ອນຮັບກັບມາຊົບປິ້ງ"
+        description: "ຍິນດີຕ້ອນເຂົ້າສູ່ເວັບໄຊທ໌ຂອງຮ້ານ NoRacing",
+        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
       })
       
       // Redirect to products page
@@ -93,7 +94,8 @@ export default function LoginPage() {
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
+        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
       })
     } finally {
       setIsLoading(false)
@@ -111,7 +113,7 @@ export default function LoginPage() {
             <Link href="/products">
               <Button variant="ghost" className="font-thai" style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                ກັບໄປໝັ່ງສິນຄ້າ
+                ກັບໄປຫນ້າສິນຄ້າ
               </Button>
             </Link>
           </div>
@@ -124,17 +126,12 @@ export default function LoginPage() {
               >
                 ເຂົ້າສູ່ລະບົບ
               </CardTitle>
-              <CardDescription 
-                className="text-gray-600 font-thai"
-                style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-              >
-                ເບິ່ງຂໍ້ມູນເພື່ອເຂົ້າສູ່ລະບົບ
-              </CardDescription>
             </CardHeader>
 
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6"                          style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
+                  >
                   <FormField
                     control={form.control}
                     name="email"
@@ -142,17 +139,15 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel 
                           className="font-thai"
-                          style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                         >
                           ອີເມວ
                         </FormLabel>
                         <FormControl>
                           <Input
                             type="email"
-                            placeholder="ເບິ່ງອີເມວ"
+                            placeholder="ປ້ອນອີເມວ"
                             {...field}
                             className="font-thai"
-                            style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                           />
                         </FormControl>
                         <FormMessage className="font-thai" />
@@ -167,7 +162,6 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel 
                           className="font-thai"
-                          style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                         >
                           ລະຫັດຜ່ານ
                         </FormLabel>
@@ -175,10 +169,9 @@ export default function LoginPage() {
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
-                              placeholder="ເບິ່ງລະຫັດຜ່ານ"
+                              placeholder="ປ້ອນລະຫັດຜ່ານ"
                               {...field}
                               className="pr-10 font-thai"
-                              style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                             />
                             <Button
                               type="button"
@@ -209,16 +202,6 @@ export default function LoginPage() {
                     >
                       {isLoading ? "ກໍາລັງເຂົ້າສູ່ລະບົບ..." : "ເຂົ້າສູ່ລະບົບ"}
                     </Button>
-
-                    <div className="text-center">
-                      <Link 
-                        href="/forgot-password" 
-                        className="text-sm text-blue-600 hover:text-blue-800 font-thai"
-                        style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-                      >
-                        ລືມລະຫັດຜ່ານ?
-                      </Link>
-                    </div>
 
                     <div className="text-center">
                       <p 

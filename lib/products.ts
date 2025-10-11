@@ -3,6 +3,7 @@ import {
   getDocs, 
   doc, 
   getDoc, 
+  updateDoc,
   query, 
   where, 
   orderBy, 
@@ -94,9 +95,11 @@ export const getProducts = async (filters: ProductFilters = {}): Promise<Laptop[
     querySnapshot.forEach((doc) => {
       const data = doc.data()
       products.push({
+        ...data,
         id: parseInt(doc.id),
-        ...data
-      } as Laptop)
+        // Map imageUrl from Firebase to image field expected by frontend
+        image: data.imageUrl || data.image || "/placeholder-image.jpg"
+      } as unknown as Laptop)
     })
 
     return products
@@ -122,9 +125,11 @@ export const getProductById = async (id: string): Promise<Laptop | null> => {
     if (productDoc.exists()) {
       const data = productDoc.data()
       return {
+        ...data,
         id: parseInt(productDoc.id),
-        ...data
-      } as Laptop
+        // Map imageUrl from Firebase to image field expected by frontend
+        image: data.imageUrl || data.image || "/placeholder-image.jpg"
+      } as unknown as Laptop
     }
     
     return null
@@ -175,9 +180,11 @@ export const getSaleProducts = async (limit?: number): Promise<Laptop[]> => {
     querySnapshot.forEach((doc) => {
       const data = doc.data()
       products.push({
+        ...data,
         id: parseInt(doc.id),
-        ...data
-      } as Laptop)
+        // Map imageUrl from Firebase to image field expected by frontend
+        image: data.imageUrl || data.image || "/placeholder-image.jpg"
+      } as unknown as Laptop)
     })
 
     return products
@@ -341,4 +348,113 @@ const getMockProducts = (filters: ProductFilters = {}): Laptop[] => {
 const getMockProductById = (id: string): Laptop | null => {
   const productId = parseInt(id)
   return mockLaptops.find(p => p.id === productId) || null
+}
+
+// Check product stock availability
+export const checkProductStock = async (productId: number, requestedQuantity: number): Promise<{ available: boolean; availableStock: number }> => {
+  if (shouldUseMockData()) {
+    const product = mockLaptops.find(p => p.id === productId)
+    const availableStock = product?.quantity || 0
+    return {
+      available: availableStock >= requestedQuantity,
+      availableStock
+    }
+  }
+
+  try {
+    const productRef = doc(db, 'products', productId.toString())
+    const productSnap = await getDoc(productRef)
+    
+    if (!productSnap.exists()) {
+      return { available: false, availableStock: 0 }
+    }
+    
+    const product = productSnap.data() as Laptop
+    const availableStock = product.quantity || 0
+    
+    return {
+      available: availableStock >= requestedQuantity,
+      availableStock
+    }
+  } catch (error) {
+    console.error('Error checking product stock:', error)
+    return { available: false, availableStock: 0 }
+  }
+}
+
+// Update product stock after purchase
+export const updateProductStock = async (productId: number, quantityPurchased: number): Promise<void> => {
+  if (shouldUseMockData()) {
+    console.log(`Mock: Would update product ${productId} stock by -${quantityPurchased}`)
+    return
+  }
+
+  try {
+    const productRef = doc(db, 'products', productId.toString())
+    const productSnap = await getDoc(productRef)
+    
+    if (!productSnap.exists()) {
+      throw new Error(`Product ${productId} not found`)
+    }
+    
+    const product = productSnap.data() as Laptop
+    const currentStock = product.quantity || 0
+    const newStock = Math.max(0, currentStock - quantityPurchased)
+    
+    await updateDoc(productRef, {
+      quantity: newStock
+    })
+    
+    console.log(`Updated product ${productId} stock from ${currentStock} to ${newStock}`)
+  } catch (error) {
+    console.error('Error updating product stock:', error)
+    throw error
+  }
+}
+
+// Validate cart item against available stock
+export const validateCartQuantity = async (productId: number, requestedQuantity: number, currentCartQuantity: number = 0): Promise<{ valid: boolean; maxAllowed: number; message?: string }> => {
+  try {
+    const stockCheck = await checkProductStock(productId, requestedQuantity + currentCartQuantity)
+    
+    if (!stockCheck.available) {
+      return {
+        valid: false,
+        maxAllowed: Math.max(0, stockCheck.availableStock - currentCartQuantity),
+        message: `ສິນຄ້າມີຈໍານວນພຽງ ${stockCheck.availableStock} ເທົ່ານີ້`
+      }
+    }
+    
+    return {
+      valid: true,
+      maxAllowed: stockCheck.availableStock
+    }
+  } catch (error) {
+    console.error('Error validating cart quantity:', error)
+    return {
+      valid: false,
+      maxAllowed: 0,
+      message: "ບໍ່ສາມາດກວດສອບສະຕ໋ອກໄດ້"
+    }
+  }
+}
+
+// Update stock for multiple products (for order processing)
+export const updateMultipleProductStock = async (orderItems: { id: number; quantity: number }[]): Promise<void> => {
+  if (shouldUseMockData()) {
+    console.log('Mock: Would update stock for multiple products:', orderItems)
+    return
+  }
+
+  try {
+    const updatePromises = orderItems.map(item => 
+      updateProductStock(item.id, item.quantity)
+    )
+    
+    await Promise.all(updatePromises)
+    console.log('Successfully updated stock for all products in order')
+  } catch (error) {
+    console.error('Error updating stock for multiple products:', error)
+    throw error
+  }
 }

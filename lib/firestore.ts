@@ -1,6 +1,7 @@
 
 import { db } from "@/lib/firebase"
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
+import { Settings } from "./types"
 
 export interface UserProfile {
   uid: string
@@ -12,6 +13,8 @@ export interface UserProfile {
   village: string
   district: string
   province: string
+  shippingBranch?: string
+  password?: string // Store password in customers table
   userType: 'customer' | 'staff' | 'admin'
   createdAt: string
   updatedAt: string
@@ -55,5 +58,25 @@ export const updateUserProfile = async (uid: string, updates: Partial<UserProfil
   } catch (error) {
     console.error("Error updating customer profile:", error)
     throw new Error("Failed to update customer profile")
+  }
+}
+
+export const getSettings = async (): Promise<Settings | null> => {
+  try {
+    const settingsRef = doc(db, "settings", "app-settings")
+    const settingsSnap = await getDoc(settingsRef)
+    
+    if (settingsSnap.exists()) {
+      return settingsSnap.data() as Settings
+    } else {
+      // Return default settings if no settings document exists
+      return {
+        enableDeposit: false,
+        qrCodeImageUrl: ""
+      }
+    }
+  } catch (error) {
+    console.error("Error getting settings:", error)
+    throw new Error("Failed to get settings")
   }
 }

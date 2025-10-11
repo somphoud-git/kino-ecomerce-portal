@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ interface LogoutModalProps {
 export function LogoutModal({ isOpen, onCloseAction }: LogoutModalProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -29,14 +31,20 @@ export function LogoutModal({ isOpen, onCloseAction }: LogoutModalProps) {
       await logout()
       toast({
         title: "ອອກຈາກລະບົບສໍາເລັດ",
-        description: "ລາກຸນມາຊົມອີກ"
+        description: "",
+        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
       })
       onCloseAction()
+      
+      // Navigate to products page after successful logout
+      router.push('/products')
+      
     } catch (error) {
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
         description: "ບໍ່ສາມາດອອກຈາກລະບົບໄດ້",
-        variant: "destructive"
+        variant: "destructive",
+        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
       })
     } finally {
       setIsLoggingOut(false)
@@ -51,13 +59,13 @@ export function LogoutModal({ isOpen, onCloseAction }: LogoutModalProps) {
             className="font-thai"
             style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
           >
-            ຢືນຍັນການອອກຈາກລະບົບ
+            ຕ້ອງການອອກຈາກເວັບໄຊທ໌ແທ້ບໍ່?
           </AlertDialogTitle>
           <AlertDialogDescription 
             className="font-thai"
             style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
           >
-            ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການອອກຈາກລະບົບ? ທ່ານຈະຕ້ອງເຂົ້າສູ່ລະບົບໃໝ່ເພື່ອເຂົ້າເຖິງບັນຊີຂອງທ່ານ.
+            ກົດ "ອອກຈາກລະບົບ" ເພື່ອຢືນຢັນ. 
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

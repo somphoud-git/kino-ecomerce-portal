@@ -24,14 +24,35 @@ export function useProducts(category?: string): UseProductsResult {
     setLoading(true)
     try {
       const productsRef = collection(db, "products")
-      const q = category
-        ? query(productsRef, where("category", "==", category))
-        : productsRef
+      // Base query to only get active products
+      let q = query(productsRef, where("status", "==", "Active"))
+      
+      // Add category filter if specified
+      if (category) {
+        q = query(productsRef, where("category", "==", category), where("status", "==", "Active"))
+      }
+      
       const querySnapshot = await getDocs(q)
-      const productsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Laptop[]
+      const productsData = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const mappedProduct = {
+          ...data,
+          id: doc.id,
+          // Map imageUrl from Firebase to image field expected by frontend
+          image: data.imageUrl || data.image || "/placeholder-image.jpg"
+        } as unknown as Laptop
+        
+        // Debug logging for image mapping
+        console.log('Product image mapping:', {
+          productId: doc.id,
+          productName: data.name,
+          originalImageUrl: data.imageUrl,
+          originalImage: data.image,
+          mappedImage: mappedProduct.image
+        })
+        
+        return mappedProduct
+      })
       setProducts(productsData)
       setTotalCount(productsData.length)
     } catch (err) {

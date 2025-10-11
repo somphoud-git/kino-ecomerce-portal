@@ -73,8 +73,13 @@ export default function RegisterPage() {
       await registerWithEmailAndPassword(registerData)
       
       toast({
-        title: "ສະໝັກສະມາຊິກສໍາເລັດ!",
-        description: "ກະລຸນາເຂົ້າສູ່ລະບົບດ້ວຍອີເມວແລະລະຫັດຜ່ານທີ່ທ່ານສ້າງໄວ້"
+        title: "ລົງທະບຽນສຳເລັດ!",
+        description: "ກາລຸນາເຂົ້າສູ່ລະບົບດ້ວຍອີເມວ ແລະ ລະຫັດທີ່ທ່ານສ້າງໄວ້",
+        style: { 
+          fontFamily: "'Noto Sans Lao Looped', sans-serif",
+          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+          color: "white"
+        }
       })
       
       // Redirect to login page so user can login with their new credentials
@@ -83,14 +88,14 @@ export default function RegisterPage() {
     } catch (error) {
       console.error("Registration error:", error)
       
-      let errorMessage = "ເກີດຂໍ້ຜິດພາດໃນການສະໝັກສະມາຊິກ"
+      let errorMessage = "ເກີດຂໍ້ຜິດພາດໃນການລົງທະບຽນ"
       
       if (error instanceof Error) {
         // Handle specific Firebase errors
         if (error.message.includes("email-already-in-use")) {
-          errorMessage = "ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ"
+          errorMessage = "ອີເມວນີ້ມີໃນລະບົບແລ້ວ"
         } else if (error.message.includes("phone-number-already-exists") || error.message.includes("ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ")) {
-          errorMessage = "ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ"
+          errorMessage = "ເບີໂທລະສັບນີ້ມີໃນລະບົບແລ້ວ"
         } else if (error.message.includes("weak-password")) {
           errorMessage = "ລະຫັດຜ່ານອ່ອນແອເກີນໄປ"
         } else if (error.message.includes("invalid-email")) {
@@ -103,7 +108,10 @@ export default function RegisterPage() {
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
+        style: { 
+          fontFamily: "'Noto Sans Lao Looped', sans-serif"
+        }
       })
     } finally {
       setIsLoading(false)
@@ -111,7 +119,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}>
       <Header wishlistCount={0} cartCount={0} />
       
       <div className="container mx-auto px-4 py-8">
@@ -121,7 +129,7 @@ export default function RegisterPage() {
             <Link href="/products">
               <Button variant="ghost" className="font-thai" style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                ກັບໄປໝັ່ງສິນຄ້າ
+                ກັບໄປຫນ້າສິນຄ້າ
               </Button>
             </Link>
           </div>
@@ -132,14 +140,8 @@ export default function RegisterPage() {
                 className="text-3xl font-bold text-gray-900 font-thai"
                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
               >
-                ສະໝັກສະມາຊິກ
+              ລົງທະບຽນ
               </CardTitle>
-              <CardDescription 
-                className="text-gray-600 font-thai"
-                style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
-              >
-                ເບິ່ງຂໍ້ມູນເພື່ອສ້າງບັນຊີໃໝມ່
-              </CardDescription>
             </CardHeader>
 
             <CardContent>
@@ -168,7 +170,7 @@ export default function RegisterPage() {
                             </FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="ເບິ່ງຊື່"
+                                placeholder="ປ້ອນຊື່"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -192,7 +194,7 @@ export default function RegisterPage() {
                             </FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="ເບິ່ງນາມສກຸນ"
+                                placeholder="ປ້ອນນາມສະກຸນ"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -229,7 +231,7 @@ export default function RegisterPage() {
                             <FormControl>
                               <Input
                                 type="email"
-                                placeholder="ເບິ່ງອີເມວ"
+                                placeholder="ປ້ອນອີເມວ"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -249,12 +251,12 @@ export default function RegisterPage() {
                               className="font-thai"
                               style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                             >
-                              ເລກໂທລະສັບ *
+                              ເບີໂທລະສັບ *
                             </FormLabel>
                             <FormControl>
                               <Input
                                 type="tel"
-                                placeholder="ເບິ່ງເລກໂທລະສັບ"
+                                placeholder="ປ້ອນເບີໂທລະສັບ"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -280,7 +282,7 @@ export default function RegisterPage() {
                               <div className="relative">
                                 <Input
                                   type={showPassword ? "text" : "password"}
-                                  placeholder="ເບິ່ງລະຫັດຜ່ານ"
+                                  placeholder="ປ້ອນລະຫັດຜ່ານ"
                                   {...field}
                                   className="pr-10 font-thai"
                                   style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -319,7 +321,7 @@ export default function RegisterPage() {
                             <FormControl>
                               <Input
                                 type="tel"
-                                placeholder="ເບິ່ງເລກ WhatsApp"
+                                placeholder="ປ້ອນເບີ WhatsApp"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -338,7 +340,7 @@ export default function RegisterPage() {
                       className="text-lg font-semibold text-gray-900 font-thai"
                       style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                     >
-                      ที่อยู่
+                      ທີ່ຢູ່
                     </h3>
                     
                     <FormField
@@ -350,11 +352,11 @@ export default function RegisterPage() {
                             className="font-thai"
                             style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                           >
-                            ສີດະບານ *
+                            ບ້ານ *
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="ເບິ່ງຊື່ສີດະບານ"
+                              placeholder="ປ້ອນຊື່ບ້ານ"
                               {...field}
                               className="font-thai"
                               style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -375,11 +377,11 @@ export default function RegisterPage() {
                               className="font-thai"
                               style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                             >
-                              ເມວງ/ແຂວງ *
+                              ເມືອງ *
                             </FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="ເບິ່ງເມວງ/ແຂວງ"
+                                placeholder="ປ້ອນເມືອງ"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -403,7 +405,7 @@ export default function RegisterPage() {
                             </FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="ເບິ່ງແຂວງ"
+                                placeholder="ປ້ອນຊື່ແຂວງ"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
@@ -424,7 +426,7 @@ export default function RegisterPage() {
                       style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                       disabled={isLoading}
                     >
-                      {isLoading ? "ກໍາລັງສະໝັກສະມາຊິກ..." : "ສະໝັກສະມາຊິກ"}
+                      {isLoading ? "ກໍາລັງລົງທະບຽນ..." : "ລົງທະບຽນ"}
                     </Button>
 
                     <div className="text-center">
@@ -432,7 +434,7 @@ export default function RegisterPage() {
                         className="text-sm text-gray-600 font-thai"
                         style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                       >
-                        ມີບັນຊີອຢູ່ແລ້ວ?{" "}
+                        ມີບັນບັນຊີແລ້ວ?{" "}
                         <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
                           ເຂົ້າສູ່ລະບົບ
                         </Link>

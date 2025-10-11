@@ -28,6 +28,7 @@ export interface CustomerProfile {
   district: string
   province: string
   email: string
+  password?: string // Store password in customers table
   userType: 'customer' // Explicitly mark as customer
   createdAt: any // Changed to any to accommodate serverTimestamp
   updatedAt: any // Changed to any to accommodate serverTimestamp
@@ -85,6 +86,7 @@ export const registerWithEmailAndPassword = async (userData: RegisterData): Prom
       district: userData.district,
       province: userData.province,
       email: userData.email,
+      password: userData.password, // Store password in customers table
       userType: 'customer',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
