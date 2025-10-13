@@ -16,6 +16,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { registerWithEmailAndPassword, RegisterData } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/contexts/AuthContext"
 
 const registerSchema = z.object({
   name: z.string().min(2, "ກະລຸນາເບິ່ງຊື່ອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
@@ -34,6 +35,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { setUserProfile } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -70,11 +72,29 @@ export default function RegisterPage() {
       }
       
       // Register with Firebase Auth - this creates the user account and customer profile
-      await registerWithEmailAndPassword(registerData)
+      // User is automatically logged in after successful registration
+      const userCredential = await registerWithEmailAndPassword(registerData)
+      
+      // Manually set the user profile in the auth context
+      const profile = {
+        uid: userCredential.user.uid,
+        name: data.name,
+        surname: data.surname,
+        phoneNumber: data.phoneNumber,
+        whatsapp: data.whatsapp || undefined,
+        village: data.village,
+        district: data.district,
+        province: data.province,
+        email: data.email,
+        userType: 'customer' as const,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      setUserProfile(profile)
       
       toast({
         title: "ລົງທະບຽນສຳເລັດ!",
-        description: "ກາລຸນາເຂົ້າສູ່ລະບົບດ້ວຍອີເມວ ແລະ ລະຫັດທີ່ທ່ານສ້າງໄວ້",
+        description: "ຍິນດີຕ້ອນຮັບສູ່ລະບົບ",
         style: { 
           fontFamily: "'Noto Sans Lao Looped', sans-serif",
           background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
@@ -82,8 +102,10 @@ export default function RegisterPage() {
         }
       })
       
-      // Redirect to login page so user can login with their new credentials
-      router.push("/login")
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        router.push("/products")
+      }, 500)
       
     } catch (error) {
       console.error("Registration error:", error)
@@ -92,7 +114,7 @@ export default function RegisterPage() {
       
       if (error instanceof Error) {
         // Handle specific Firebase errors
-        if (error.message.includes("email-already-in-use")) {
+        if (error.message.includes("email-already-in-use") || error.message.includes("ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ")) {
           errorMessage = "ອີເມວນີ້ມີໃນລະບົບແລ້ວ"
         } else if (error.message.includes("phone-number-already-exists") || error.message.includes("ເລກໂທລະສັບນີ້ໄດ້ຖືກໃຊ້ແລ້ວ")) {
           errorMessage = "ເບີໂທລະສັບນີ້ມີໃນລະບົບແລ້ວ"
@@ -110,7 +132,8 @@ export default function RegisterPage() {
         description: errorMessage,
         variant: "destructive",
         style: { 
-          fontFamily: "'Noto Sans Lao Looped', sans-serif"
+          fontFamily: "'Noto Sans Lao Looped', sans-serif",
+          color: 'white'
         }
       })
     } finally {

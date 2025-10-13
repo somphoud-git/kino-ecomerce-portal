@@ -11,6 +11,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { uploadReceiptToS3 } from './s3-upload'
 
 export interface OrderItem {
   id: number
@@ -19,6 +20,7 @@ export interface OrderItem {
   quantity: number
   image?: string
   barcode?: string
+  zone?: string
 }
 
 export interface CustomerInfo {
@@ -69,50 +71,20 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'u
     const orderId = `ORD${Date.now()}`
     console.log('Generated order ID:', orderId)
     
-    // Upload receipt file to S3 if provided
+    // Upload receipt file to S3 if provided (client-side upload)
     let receiptUrl = null
     if (receiptFile) {
       try {
         console.log('Uploading receipt file to S3:', receiptFile.name)
         
-        // Upload to S3 via API route
-        const formData = new FormData()
-        formData.append('file', receiptFile)
-        formData.append('orderId', orderId)
-
-        const uploadResponse = await fetch('/api/upload-receipt', {
-          method: 'POST',
-          body: formData
-        })
-
-        console.log('Upload response status:', uploadResponse.status, uploadResponse.statusText)
-
-        if (!uploadResponse.ok) {
-          // Get error details from response
-          let errorDetails = uploadResponse.statusText
-          try {
-            const errorResponse = await uploadResponse.json()
-            errorDetails = errorResponse.details || errorResponse.error || uploadResponse.statusText
-            console.error('Upload error details:', errorResponse)
-          } catch (e) {
-            console.error('Could not parse error response')
-          }
-          
-          throw new Error(`S3 upload failed: ${errorDetails}`)
-        }
-
-        const uploadResult = await uploadResponse.json()
-        receiptUrl = uploadResult.url
+        // Use client-side S3 upload - MUST succeed for order to be created
+        receiptUrl = await uploadReceiptToS3(receiptFile, orderId)
         console.log('Receipt uploaded successfully to S3:', receiptUrl)
         
-        // Log if this was a mock upload
-        if (uploadResult.mock) {
-          console.warn('Receipt upload was mocked - AWS credentials not configured')
-        }
       } catch (uploadError) {
         console.error('Error uploading receipt to S3:', uploadError)
-        // Continue without receipt upload rather than failing entire order
-        receiptUrl = null
+        // Throw error to prevent order creation if receipt upload fails
+        throw new Error(`ບໍ່ສາມາດອັບໂຫຼດໃບບິນໄດ້: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`)
       }
     }
     

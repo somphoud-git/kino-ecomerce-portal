@@ -16,6 +16,7 @@ export interface UserProfile {
   shippingBranch?: string
   password?: string // Store password in customers table
   userType: 'customer' | 'staff' | 'admin'
+  status?: string // User status: 'Active' or 'Blocked'
   createdAt: string
   updatedAt: string
 }

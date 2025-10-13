@@ -30,6 +30,7 @@ export interface CustomerProfile {
   email: string
   password?: string // Store password in customers table
   userType: 'customer' // Explicitly mark as customer
+  status?: string // User status: 'Active' or 'Blocked'
   createdAt: any // Changed to any to accommodate serverTimestamp
   updatedAt: any // Changed to any to accommodate serverTimestamp
 }
@@ -47,15 +48,23 @@ export interface RegisterData {
 }
 
 export interface LoginData {
-  email: string
+  emailOrPhone: string
   password: string
 }
 
 // Register new customer with email and password
 export const registerWithEmailAndPassword = async (userData: RegisterData): Promise<UserCredential> => {
   try {
-    // Check if email already exists by trying to create user first
-    // Firebase will throw error if email exists
+    // Check if email already exists in customers collection
+    const emailQuery = query(
+      collection(db, 'customers'),
+      where('email', '==', userData.email)
+    )
+    const emailSnapshot = await getDocs(emailQuery)
+    
+    if (!emailSnapshot.empty) {
+      throw new Error('ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ')
+    }
     
     // Check if phone number already exists in customers collection
     const phoneQuery = query(
@@ -94,9 +103,7 @@ export const registerWithEmailAndPassword = async (userData: RegisterData): Prom
 
     await setDoc(doc(db, 'customers', userCredential.user.uid), customerProfile)
 
-    // Sign out the user immediately after registration to prevent auto-login
-    await signOut(auth)
-
+    // User is now logged in and ready to use the app
     return userCredential
   } catch (error) {
     console.error('Registration error:', error)
@@ -107,19 +114,55 @@ export const registerWithEmailAndPassword = async (userData: RegisterData): Prom
   }
 }
 
-// Login with email and password
+// Login with email or phone number and password
 export const loginWithEmailAndPassword = async (loginData: LoginData): Promise<UserCredential> => {
   try {
-    // Sign in with email/password
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      loginData.email,
-      loginData.password
-    )
-
-    return userCredential
+    const { emailOrPhone, password } = loginData
+    
+    // Check if input is an email (contains @) or phone number
+    const isEmail = emailOrPhone.includes('@')
+    
+    if (isEmail) {
+      // Login directly with email
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        emailOrPhone,
+        password
+      )
+      return userCredential
+    } else {
+      // Login with phone number - need to find the email first
+      const customersQuery = query(
+        collection(db, 'customers'),
+        where('phoneNumber', '==', emailOrPhone)
+      )
+      const querySnapshot = await getDocs(customersQuery)
+      
+      if (querySnapshot.empty) {
+        throw new Error('ບໍ່ພົບຜູ້ໃຊ້ທີ່ມີເບີໂທລະສັບນີ້')
+      }
+      
+      // Get the email from the customer document
+      const customerDoc = querySnapshot.docs[0]
+      const customerData = customerDoc.data()
+      const email = customerData.email
+      
+      // Sign in with the found email
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+      return userCredential
+    }
   } catch (error) {
     console.error('Login error:', error)
+    
+    // If it's already an Error we threw, re-throw it
+    if (error instanceof Error && error.message.includes('ບໍ່ພົບຜູ້ໃຊ້')) {
+      throw error
+    }
+    
     const authError = error as AuthError
     
     switch (authError.code) {
@@ -127,8 +170,10 @@ export const loginWithEmailAndPassword = async (loginData: LoginData): Promise<U
         throw new Error('ບໍ່ພົບຜູ້ໃຊ້ທີ່ມີອີເມວນີ້')
       case 'auth/wrong-password':
         throw new Error('ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ')
+      case 'auth/invalid-credential':
+        throw new Error('ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ')
       case 'auth/too-many-requests':
-        throw new Error('ມີການພະຍາຍາມເຂົ້າສູ່ລະບົບຫຼາຍເກີນໄປ ກະລຸນາລອງໃໝ່ອີກຄັ້ງໃນພາຍຫຼັງ')
+        throw new Error('ກະລຸນາລອງໃໝ່ອີກຄັ້ງໃນພາຍຫຼັງ')
       default:
         throw new Error('ເກີດຂໍ້ຜິດພາດໃນການເຂົ້າສູ່ລະບົບ')
     }

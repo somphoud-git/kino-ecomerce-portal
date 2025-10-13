@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { logout } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/hooks/use-cart"
 
 interface LogoutModalProps {
   isOpen: boolean
@@ -24,11 +25,16 @@ export function LogoutModal({ isOpen, onCloseAction }: LogoutModalProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const { clearCart } = useCart()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
       await logout()
+      
+      // Clear the cart when user logs out
+      clearCart()
+      
       toast({
         title: "ອອກຈາກລະບົບສໍາເລັດ",
         description: "",

@@ -13,12 +13,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { loginWithEmailAndPassword, LoginData } from "@/lib/auth"
+import { loginWithEmailAndPassword, LoginData, logout } from "@/lib/auth"
 import { getUserProfile } from "@/lib/firestore" // Add this import
 import { useToast } from "@/hooks/use-toast"
 
 const loginSchema = z.object({
-  email: z.string().email("ກາລຸນາກວດສອບອີເມວ"),
+  emailOrPhone: z.string().min(1, "ກາລຸນາປ້ອນອີເມວ ຫຼື ເບີໂທລະສັບ"),
   password: z.string().min(1, "ກາລະນາກວດສອບລະຫັດຜ່ານ"),
 })
 
@@ -33,7 +33,7 @@ export default function LoginPage() {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      emailOrPhone: "",
       password: "",
     },
   })
@@ -43,18 +43,37 @@ export default function LoginPage() {
     try {
       // Prepare data for Firebase login
       const loginData: LoginData = {
-        email: data.email,
+        emailOrPhone: data.emailOrPhone,
         password: data.password
       }
       
       // Login with Firebase Auth
       const userCredential = await loginWithEmailAndPassword(loginData)
       
-      // Fetch user profile from Firestore
+      // Fetch user profile from Firestore and check status
       try {
         const userProfile = await getUserProfile(userCredential.user.uid)
         if (userProfile) {
           console.log("User profile loaded:", userProfile)
+          
+          // Check if user is blocked
+          if (userProfile.status === 'Blocked') {
+            // Sign out the blocked user immediately
+            await logout()
+            
+            toast({
+              title: "🔒 ບໍ່ສາມາດເຂົ້າສູ່ລະບົບໄດ້",
+              description: "User ຂອງທ່ານຖືກບ໊ອກ",
+              variant: "destructive",
+              style: { 
+                fontFamily: "'Noto Sans Lao Looped', sans-serif",
+                color: 'white'
+              }
+            })
+            
+            setIsLoading(false)
+            return // Stop the login process
+          }
           // You can store this in context or state management if needed
         }
       } catch (profileError) {
@@ -95,7 +114,10 @@ export default function LoginPage() {
         title: "ເກີດຂໍ້ຜິດພາດ",
         description: errorMessage,
         variant: "destructive",
-        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
+        style: { 
+          fontFamily: "'Noto Sans Lao Looped', sans-serif",
+          color: 'white'
+        }
       })
     } finally {
       setIsLoading(false)
@@ -134,18 +156,18 @@ export default function LoginPage() {
                   >
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="emailOrPhone"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel 
                           className="font-thai"
                         >
-                          ອີເມວ
+                          ອີເມວ ຫຼື ເບີໂທລະສັບ
                         </FormLabel>
                         <FormControl>
                           <Input
-                            type="email"
-                            placeholder="ປ້ອນອີເມວ"
+                            type="text"
+                            placeholder="ປ້ອນອີເມວ ຫຼື ເບີໂທລະສັບ"
                             {...field}
                             className="font-thai"
                           />

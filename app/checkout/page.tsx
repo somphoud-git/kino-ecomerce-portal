@@ -27,7 +27,7 @@ const checkoutSchema = z.object({
   village: z.string().min(1, "ກະລຸນາເບິ່ງຊື່ບ້ານ"),
   district: z.string().min(1, "ກະລຸນາເບິ່ງເມືອງ"),
   province: z.string().min(1, "ກະລຸນາເບິ່ງແຂວງ"),
-  shippingBranch: z.string().min(1, "ກະລຸນາເລືອກສາຂາຂົນສົ່ງ"),
+  shippingBranch: z.string().min(1, "ກະລຸນາເລືອກບໍລິສັດຂົນສົ່ງກ່ອນດຳເນີນຕໍ່"),
 })
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>
@@ -100,6 +100,22 @@ export default function CheckoutPage() {
   }, [user, authLoading, isLoadingProfile, router])
 
   const onSubmit = async (data: CheckoutFormData) => {
+    // Validate shipping branch is selected
+    if (!data.shippingBranch || data.shippingBranch.trim() === "") {
+      toast({
+        title: "ກະລຸນາເລືອກບໍລິສັດຂົນສົ່ງ",
+        description: "ກະລຸນາເລືອກບໍລິສັດຂົນສົ່ງກ່ອນດຳເນີນຕໍ່",
+        variant: "destructive",
+        style: { 
+          fontFamily: "'Noto Sans Lao Looped', sans-serif",
+          background: "#FEE2E2", 
+          border: "1px solid #FECACA",
+          color: "#B91C1C"
+        }
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
       // Store checkout data in session storage for payment page
@@ -120,7 +136,8 @@ export default function CheckoutPage() {
       toast({
         title: "ເກີດຂໍ້ຜິດພາດ",
         description: "ບໍ່ສາມາດດໍາເນີນການຊື້ໄດ້",
-        variant: "destructive"
+        variant: "destructive",
+        style: { fontFamily: "'Noto Sans Lao Looped', sans-serif" }
       })
     } finally {
       setIsLoading(false)

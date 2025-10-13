@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { getUserOrders, Order, hasDepositPayment, hasRemainingAmount, getPaymentStatus } from "@/lib/orders"
+import { getProductById } from "@/lib/products"
 import { 
   ShoppingCart, 
   History, 
@@ -212,28 +213,24 @@ export default function CartPage() {
                                       size="icon" 
                                       onClick={async () => {
                                         try {
-                                          const response = await fetch(`/api/check-product?id=${item.id}`);
-                                          if (response.ok) {
-                                            const product = await response.json();
-                                            
-                                            if (product && product.quantity !== undefined) {
-                                              if (item.quantity < product.quantity) {
-                                                updateQuantity(item.id, item.quantity + 1);
-                                              } else {
-                                                toast({
-                                                  title: "⚠️ ຂໍ້ຈຳກັດສິນຄ້າ",
-                                                  description: `ບໍ່ສາມາດເພີ່ມສິນຄ້າໄດ້, ສິນຄ້າໃນສະຕ໊ອກມີພຽງແຕ່ ${product.quantity} ລາຍການເທົ່ານັ້ນ`,
-                                                  variant: "destructive",
-                                                  style: { 
-                                                    fontFamily: "'Noto Sans Lao Looped', sans-serif",
-                                                    background: "#FEE2E2", 
-                                                    border: "1px solid #FECACA",
-                                                    color: "#B91C1C"
-                                                  }
-                                                });
-                                              }
-                                            } else {
+                                          // Use Firebase directly instead of API route
+                                          const product = await getProductById(item.id.toString());
+                                          
+                                          if (product && product.quantity !== undefined) {
+                                            if (item.quantity < product.quantity) {
                                               updateQuantity(item.id, item.quantity + 1);
+                                            } else {
+                                              toast({
+                                                title: "⚠️ ຂໍ້ຈຳກັດສິນຄ້າ",
+                                                description: `ບໍ່ສາມາດເພີ່ມສິນຄ້າໄດ້, ສິນຄ້າໃນສະຕ໊ອກມີພຽງແຕ່ ${product.quantity} ລາຍການເທົ່ານັ້ນ`,
+                                                variant: "destructive",
+                                                style: { 
+                                                  fontFamily: "'Noto Sans Lao Looped', sans-serif",
+                                                  background: "#FEE2E2", 
+                                                  border: "1px solid #FECACA",
+                                                  color: "#B91C1C"
+                                                }
+                                              });
                                             }
                                           } else {
                                             updateQuantity(item.id, item.quantity + 1);

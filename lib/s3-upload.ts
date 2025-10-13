@@ -1,5 +1,5 @@
-// S3 Upload utility for receipt images
-// Note: This assumes AWS SDK is installed. If not, install with: npm install @aws-sdk/client-s3
+// S3 Upload utility for receipt images - Client-side implementation
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
 interface UploadConfig {
   bucketName: string
@@ -12,37 +12,59 @@ interface UploadConfig {
 const S3_CONFIG: UploadConfig = {
   bucketName: process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'kino-ecommerce-image',
   region: process.env.NEXT_PUBLIC_S3_REGION || 'ap-southeast-2',
-  accessKeyId: process.env.S3_ACCESS_KEY_ID,
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+  accessKeyId: process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY
 }
 
+// Client-side direct S3 upload using AWS SDK
 export const uploadReceiptToS3 = async (file: File, orderId: string): Promise<string> => {
   try {
+    // Validate AWS credentials
+    if (!S3_CONFIG.accessKeyId || !S3_CONFIG.secretAccessKey) {
+      console.warn('AWS credentials not configured. Receipt will not be uploaded.')
+      throw new Error('AWS credentials not configured')
+    }
+
     // Create a unique filename
     const timestamp = Date.now()
     const fileExtension = file.name.split('.').pop()
     const fileName = `receipts/${orderId}_${timestamp}.${fileExtension}`
 
-    // For client-side upload, we'll use a presigned URL approach or FormData
-    // Since we don't have AWS SDK setup, let's create a simple upload function
-    // that sends the file to an API endpoint that handles S3 upload
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('fileName', fileName)
-    formData.append('orderId', orderId)
-
-    const response = await fetch('/api/upload-receipt', {
-      method: 'POST',
-      body: formData
+    console.log('Uploading to S3:', {
+      bucket: S3_CONFIG.bucketName,
+      region: S3_CONFIG.region,
+      fileName: fileName
     })
 
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`)
-    }
+    // Initialize S3 client
+    const s3Client = new S3Client({
+      region: S3_CONFIG.region,
+      credentials: {
+        accessKeyId: S3_CONFIG.accessKeyId,
+        secretAccessKey: S3_CONFIG.secretAccessKey
+      }
+    })
 
-    const result = await response.json()
-    return result.url
+    // Convert File to Buffer for upload
+    const fileBuffer = await file.arrayBuffer()
+
+    // Upload to S3 (without ACL - use bucket policy for public access instead)
+    const command = new PutObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Key: fileName,
+      Body: new Uint8Array(fileBuffer),
+      ContentType: file.type,
+      // Removed ACL parameter - use bucket policy for public access
+    })
+
+    const response = await s3Client.send(command)
+    console.log('S3 upload response:', response)
+
+    // Generate public URL
+    const fileUrl = `https://${S3_CONFIG.bucketName}.s3.${S3_CONFIG.region}.amazonaws.com/${fileName}`
+    console.log('Receipt uploaded successfully to S3:', fileUrl)
+
+    return fileUrl
 
   } catch (error) {
     console.error('Error uploading receipt to S3:', error)

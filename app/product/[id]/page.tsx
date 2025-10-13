@@ -10,6 +10,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { CartDrawer } from "@/components/cart/cart-drawer"
 import { ProductCard } from "@/components/products/product-card"
+import { FloatingCartButton } from "@/components/cart/floating-cart-button"
 import { useProduct, useProducts } from "@/hooks/use-products"
 import { useCart } from "@/hooks/use-cart"
 import { useAuth } from "@/contexts/AuthContext"
@@ -336,6 +337,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       )}
 
       <Footer />
+
+      {/* Floating Cart Button */}
+      <FloatingCartButton />
     </div>
   )
 }

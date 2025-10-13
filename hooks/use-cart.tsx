@@ -12,6 +12,7 @@ export interface CartItem {
   quantity: number
   discountPrice?: number | null
   barcode?: string
+  zone?: string
 }
 
 interface CartContextType {
@@ -118,6 +119,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         discountPrice: laptop.discountPrice,
         quantity: safeQuantity,
         barcode: laptop.barcode,
+        zone: laptop.zone,
       }
       return [...prevItems, newCartItem]
     })

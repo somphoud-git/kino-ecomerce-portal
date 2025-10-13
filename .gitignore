@@ -25,3 +25,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#deploy doc
+AWS_DEPLOYMENT_GUIDE
+AWS_DEPLOYMENT_GUIDE.md
+build-and-deploy.ps1
+build-for-production.ps1
+build-for-production.ps1
+FIX_RECEIPT_UPLOAD_PRODUCTION.md
+DEPLOYMENT_SUMMARY.md
+DEPLOYMENT_S3.md
+DEPLOYMENT_GUIDE.md
+deploy-to-s3.sh
+deploy-fast.ps1
+DEPLOY_QUICK_START.md

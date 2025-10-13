@@ -19,6 +19,7 @@ export interface Laptop {
   description?: string
   features?: string[]
   barcode?: string
+  zone?: string
   createdAt?: Date
   updatedAt?: Date
   status?: string
@@ -44,6 +45,7 @@ export interface CartItem {
   discountPrice?: number
   quantity: number
   barcode?: string
+  zone?: string
 }
 
 export interface Settings {

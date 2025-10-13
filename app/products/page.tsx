@@ -12,6 +12,7 @@ import { ProductCard } from "@/components/products/product-card"
 import { TopProductsSection } from "@/components/products/top-products-section"
 import { CartDrawer } from "@/components/cart/cart-drawer"
 import { LoginModal } from "@/components/auth/login-modal"
+import { FloatingCartButton } from "@/components/cart/floating-cart-button"
 import { useProducts } from "@/hooks/use-products"
 import { useTopProducts } from "@/hooks/use-top-products"
 import { useCart } from "@/hooks/use-cart"
@@ -469,6 +470,9 @@ export default function ProductsPage() {
       </div>
 
       <Footer />
+
+      {/* Floating Cart Button */}
+      <FloatingCartButton />
 
       <LoginModal
         isOpen={showLoginModal}
