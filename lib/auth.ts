@@ -17,6 +17,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { isRandomEmail } from './email-utils';
 
 export interface CustomerProfile {
   uid: string
@@ -56,14 +57,17 @@ export interface LoginData {
 export const registerWithEmailAndPassword = async (userData: RegisterData): Promise<UserCredential> => {
   try {
     // Check if email already exists in customers collection
-    const emailQuery = query(
-      collection(db, 'customers'),
-      where('email', '==', userData.email)
-    )
-    const emailSnapshot = await getDocs(emailQuery)
-    
-    if (!emailSnapshot.empty) {
-      throw new Error('ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ')
+    // Skip check if it's a randomly generated email
+    if (!isRandomEmail(userData.email)) {
+      const emailQuery = query(
+        collection(db, 'customers'),
+        where('email', '==', userData.email)
+      )
+      const emailSnapshot = await getDocs(emailQuery)
+      
+      if (!emailSnapshot.empty) {
+        throw new Error('ອີເມວນີ້ໄດ້ຖືກໃຊ້ແລ້ວ')
+      }
     }
     
     // Check if phone number already exists in customers collection

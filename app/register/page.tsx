@@ -17,15 +17,16 @@ import { Footer } from "@/components/layout/footer"
 import { registerWithEmailAndPassword, RegisterData } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/AuthContext"
+import { generateRandomEmail } from "@/lib/email-utils"
 
 const registerSchema = z.object({
   name: z.string().min(2, "ກະລຸນາເບິ່ງຊື່ອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
   surname: z.string().min(2, "ກະລຸນາເບິ່ງນາມສກຸນອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
-  email: z.string().email("ກະລຸນາໃສ່ອີເມວໃຫ້ຖືກຕ້ອງ"),
+  email: z.string().optional(), // Email is now optional
   phoneNumber: z.string().min(8, "ເລກໂທລະສັບຕ້ອງມີອຍ່າງນ້ອຍ 8 ຫນັກ"),
   password: z.string().min(6, "ລະຫັດຜ່ານຕ້ອງມີອຍ່າງນ້ອຍ 6 ຕົວອັກສອນ"),
   whatsapp: z.string().optional(),
-  village: z.string().min(1, "ກະລຸນາເບິ່ງຊື່ສີດະບານ"),
+  village: z.string().min(1, "ກະລຸນາເບິ່ງຊື່ບ້ານ"),
   district: z.string().min(1, "ກະລຸນາເບິ່ງເມວງ/ແຂວງ"),
   province: z.string().min(1, "ກະລຸນາເບິ່ງແຂວງ"),
 })
@@ -58,11 +59,19 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     try {
+      // Generate random email if user didn't provide one
+      // Uses utility function to create consistent format
+      const emailToUse = data.email && data.email.trim() !== "" 
+        ? data.email 
+        : generateRandomEmail(data.phoneNumber)
+      
+      console.log('Email for registration:', emailToUse)
+      
       // Prepare data for Firebase registration
       const registerData: RegisterData = {
         name: data.name,
         surname: data.surname,
-        email: data.email,
+        email: emailToUse, // Use provided email or generated one
         phoneNumber: data.phoneNumber,
         whatsapp: data.whatsapp || undefined,
         village: data.village,
@@ -85,7 +94,7 @@ export default function RegisterPage() {
         village: data.village,
         district: data.district,
         province: data.province,
-        email: data.email,
+        email: emailToUse,
         userType: 'customer' as const,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -249,17 +258,20 @@ export default function RegisterPage() {
                               className="font-thai"
                               style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                             >
-                              ອີເມວ *
+                              ອີເມວ (ຖ້າມີ)
                             </FormLabel>
                             <FormControl>
                               <Input
                                 type="email"
-                                placeholder="ປ້ອນອີເມວ"
+                                placeholder="ປ້ອນອີເມວ (ຖ້າມີ)"
                                 {...field}
                                 className="font-thai"
                                 style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}
                               />
                             </FormControl>
+                            <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: "'Noto Sans Lao Looped', sans-serif" }}>
+                              ຖ້າບໍ່ໃສ່ອີເມວ, ທ່ານສາມາດເຂົ້າສູ່ລະບົບດ້ວຍເບີໂທລະສັບ
+                            </p>
                             <FormMessage className="font-thai" />
                           </FormItem>
                         )}

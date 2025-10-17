@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'export',
-    distDir: 'out', // Explicit output directory for S3
+    distDir: 'out', // Output directory for static export
     eslint: {
         ignoreDuringBuilds: true,
     },

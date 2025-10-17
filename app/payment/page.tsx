@@ -786,7 +786,7 @@ export default function PaymentPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm sm:text-base font-semibold font-thai">
-                              ຄໍາເຫັນເພີ່ມເຕີມ (ທາງເລືອກ)
+                              ຄໍາເຫັນເພີ່ມເຕີມ (ຖ້າມີ)
                             </FormLabel>
                             <FormControl>
                               <div className="relative">

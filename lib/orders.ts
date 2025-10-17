@@ -11,7 +11,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore'
 import { db } from './firebase'
-import { uploadReceiptToS3 } from './s3-upload'
+import { uploadReceiptToFirebase } from './firebase-storage-upload'
 
 export interface OrderItem {
   id: number
@@ -71,18 +71,18 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'u
     const orderId = `ORD${Date.now()}`
     console.log('Generated order ID:', orderId)
     
-    // Upload receipt file to S3 if provided (client-side upload)
+    // Upload receipt file to Firebase Storage if provided
     let receiptUrl = null
     if (receiptFile) {
       try {
-        console.log('Uploading receipt file to S3:', receiptFile.name)
+        console.log('Uploading receipt file to Firebase Storage:', receiptFile.name)
         
-        // Use client-side S3 upload - MUST succeed for order to be created
-        receiptUrl = await uploadReceiptToS3(receiptFile, orderId)
-        console.log('Receipt uploaded successfully to S3:', receiptUrl)
+        // Use Firebase Storage upload - MUST succeed for order to be created
+        receiptUrl = await uploadReceiptToFirebase(receiptFile, orderId)
+        console.log('Receipt uploaded successfully to Firebase Storage:', receiptUrl)
         
       } catch (uploadError) {
-        console.error('Error uploading receipt to S3:', uploadError)
+        console.error('Error uploading receipt to Firebase Storage:', uploadError)
         // Throw error to prevent order creation if receipt upload fails
         throw new Error(`ບໍ່ສາມາດອັບໂຫຼດໃບບິນໄດ້: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`)
       }

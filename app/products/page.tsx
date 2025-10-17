@@ -27,7 +27,7 @@ export default function ProductsPage() {
   const [pendingLaptop, setPendingLaptop] = useState<Laptop | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
-  const itemsPerPage = 12 // Multiple of 2 for mobile, 4 for desktop - ensures proper grid alignment
+  const itemsPerPage = 20 // Multiple of 4 for desktop grid (5 rows x 4 columns), also works with mobile 2-column grid
 
   const searchParams = useSearchParams()
   const { cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice } = useCart()

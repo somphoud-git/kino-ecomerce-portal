@@ -21,7 +21,7 @@ import { Loader2, ShoppingBag, MapPin, User, CreditCard, Save, ArrowLeft } from 
 const checkoutSchema = z.object({
   name: z.string().min(2, "ກະລຸນາເບິ່ງຊື່ອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
   surname: z.string().min(2, "ກະລຸນາເບິ່ງນາມສກຸນອຍ່າງນ້ອຍ 2 ຕົວອັກສອນ"),
-  email: z.string().email("ກະລຸນາໃສ່ອີເມວໃຫ້ຖືກຕ້ອງ"),
+  email: z.string().optional(), // Email is optional
   phoneNumber: z.string().min(8, "ເລກໂທລະສັບຕ້ອງມີອຍ່າງນ້ອຍ 8 ຫນັກ"),
   whatsapp: z.string().optional(),
   village: z.string().min(1, "ກະລຸນາເບິ່ງຊື່ບ້ານ"),
@@ -284,9 +284,9 @@ export default function CheckoutPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="font-medium">ອີເມວ *</FormLabel>
+                              <FormLabel className="font-medium">ອີເມວ (ຖ້າມີ)</FormLabel>
                               <FormControl>
-                                <Input type="email" {...field} className="h-12" placeholder="example@email.com" />
+                                <Input type="email" {...field} className="h-12" placeholder="example@email.com (ຖ້າມີ)" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -313,7 +313,7 @@ export default function CheckoutPage() {
                         name="whatsapp"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">WhatsApp (ທາງເລືອກ)</FormLabel>
+                            <FormLabel className="font-medium">WhatsApp (ຖ້າມີ)</FormLabel>
                             <FormControl>
                               <Input {...field} className="h-12" placeholder="020 XX XXX XXX" />
                             </FormControl>
