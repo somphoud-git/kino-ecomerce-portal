@@ -4,15 +4,14 @@
 
 /**
  * Generate a random email for users who register without providing one
- * Format: phone_{phoneNumber}_{timestamp}@kino-temp.com
+ * Format: phone_{phoneNumber}@noracingshop.com
  * 
  * @param phoneNumber - The user's phone number
  * @returns A unique temporary email address
  */
 export const generateRandomEmail = (phoneNumber: string): string => {
   const cleanPhone = phoneNumber.replace(/\s/g, '') // Remove spaces
-  const timestamp = Date.now()
-  return `phone_${cleanPhone}_${timestamp}@kino-temp.com`
+  return `phone_${cleanPhone}@noracingshop.com`
 }
 
 /**
@@ -22,7 +21,7 @@ export const generateRandomEmail = (phoneNumber: string): string => {
  * @returns true if the email is a temporary generated one
  */
 export const isRandomEmail = (email: string): boolean => {
-  return email.includes('@kino-temp.com') && email.startsWith('phone_')
+  return email.includes('@noracingshop.com') && email.startsWith('phone_')
 }
 
 /**

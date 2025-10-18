@@ -362,8 +362,11 @@ export default function ProductsPage() {
           <div className="products-grid grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {currentLaptops.filter(laptop => laptop && laptop.id).map((laptop) => (
               <div key={laptop.id || Math.random()} className="product-card bg-white rounded-lg shadow-lg overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
-                {/* Fixed Image Container */}
-                <div className="product-image aspect-square bg-gray-100 relative overflow-hidden">
+                {/* Fixed Image Container - Clickable */}
+                <div 
+                  className="product-image aspect-square bg-gray-100 relative overflow-hidden cursor-pointer"
+                  onClick={() => handleViewDetails(laptop)}
+                >
                   <div className="w-full h-full flex items-center justify-center p-4">
                     <img 
                       src={laptop.image || "/placeholder-image.jpg"} 
@@ -385,7 +388,12 @@ export default function ProductsPage() {
                 </div>
                 <div className="product-info p-4 flex flex-col flex-grow">
                   <div className="flex-grow">
-                    <h3 className="product-title text-lg font-bold text-gray-900 line-clamp-2">{laptop.name || "Unknown Product"} </h3>
+                    <h3 
+                      className="product-title text-lg font-bold text-gray-900 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors"
+                      onClick={() => handleViewDetails(laptop)}
+                    >
+                      {laptop.name || "Unknown Product"}
+                    </h3>
                     <p className="product-description text-sm text-gray-600 mt-2 line-clamp-2">
                       {laptop.description || "No description available."}
                     </p>

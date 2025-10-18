@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/contexts/AuthContext"
-import { getOrder, Order, hasDepositPayment, hasRemainingAmount, getPaymentStatus, getPaymentStatusText, getPaymentStatusValue } from "@/lib/orders"
+// Assuming these imports are correct
+import { getOrder, Order, hasDepositPayment, hasRemainingAmount, getPaymentStatus, getPaymentStatusText, getPaymentStatusValue } from "@/lib/orders" 
 import { CheckCircle, Package, Clock, CreditCard, MapPin, Phone, Mail, Eye, X } from "lucide-react"
 
 
@@ -123,9 +124,11 @@ export default function OrderSuccessPage() {
             </p>
           </div>
 
+          {/* Grid Layout: Left column (3 cards, equal height) | Right column (1 card, height-filling with scroll) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Order Information */}
-            <div className="space-y-6">
+            
+            {/* Left Column (3 cards, equal height) */}
+            <div className="grid grid-cols-1 gap-6 auto-rows-fr"> 
               {/* Order Status */}
               <Card>
                 <CardHeader>
@@ -175,9 +178,10 @@ export default function OrderSuccessPage() {
                       <span>{order.customerInfo.email}</span>
                     </div>
                     {order.customerInfo.whatsapp && (
-                      <p className="text-sm text-gray-600">
-                        WhatsApp: {order.customerInfo.whatsapp}
-                      </p>
+                      <div className="flex items-center text-sm text-gray-600">
+                         WhatsApp: <Phone className="w-4 h-4 mr-2" />
+                        <span>{order.customerInfo.whatsapp}</span>
+                      </div>
                     )}
                     <p className="text-sm text-gray-600">
                       ທີ່ຢູ່: {order.customerInfo.village}, {order.customerInfo.district}, {order.customerInfo.province}
@@ -267,6 +271,11 @@ export default function OrderSuccessPage() {
                             </Dialog>
                           </div>
 
+                          <div className="flex-grow">
+                            <p className="font-medium">ໃບບິນການໂອນເງິນ</p>
+                            <p className="text-sm text-gray-500">ຄລິກຮູບເພື່ອເບິ່ງຂະໜາດໃຫຍ່</p>
+                          </div>
+
                         </div>
                       ) : (
                         // Handle old format: paymentReceipt is an object
@@ -331,8 +340,8 @@ export default function OrderSuccessPage() {
               )}
             </div>
 
-            {/* Order Items */}
-            <Card>
+            {/* Right Column: Order Items (Height-filling with scroll) */}
+            <Card className="flex flex-col h-full lg:col-start-2">
               <CardHeader>
                 <CardTitle className="font-thai">
                   ລາຍການສິນຄ້າ
@@ -341,8 +350,9 @@ export default function OrderSuccessPage() {
                   ທັງໝົດ {order.totalItems} ລາຍການ
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-0 flex-grow">
+                {/* Scrollable Container with Max Height */}
+                <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] p-6 pt-0">
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center space-x-4 py-3 border-b">
                       {item.image ? (
@@ -411,6 +421,7 @@ export default function OrderSuccessPage() {
                 </div>
               </CardContent>
             </Card>
+
           </div>
 
           {/* Action Buttons */}

@@ -68,16 +68,21 @@ export default function RegisterPage() {
       console.log('Email for registration:', emailToUse)
       
       // Prepare data for Firebase registration
+      // Only include whatsapp if it has a value (Firebase doesn't accept undefined)
       const registerData: RegisterData = {
         name: data.name,
         surname: data.surname,
         email: emailToUse, // Use provided email or generated one
         phoneNumber: data.phoneNumber,
-        whatsapp: data.whatsapp || undefined,
         village: data.village,
         district: data.district,
         province: data.province,
         password: data.password,
+      }
+      
+      // Only add whatsapp if it has a value
+      if (data.whatsapp && data.whatsapp.trim() !== '') {
+        registerData.whatsapp = data.whatsapp
       }
       
       // Register with Firebase Auth - this creates the user account and customer profile
@@ -85,12 +90,11 @@ export default function RegisterPage() {
       const userCredential = await registerWithEmailAndPassword(registerData)
       
       // Manually set the user profile in the auth context
-      const profile = {
+      const profile: any = {
         uid: userCredential.user.uid,
         name: data.name,
         surname: data.surname,
         phoneNumber: data.phoneNumber,
-        whatsapp: data.whatsapp || undefined,
         village: data.village,
         district: data.district,
         province: data.province,
@@ -99,6 +103,12 @@ export default function RegisterPage() {
         createdAt: new Date(),
         updatedAt: new Date()
       }
+      
+      // Only add whatsapp to profile if it has a value
+      if (data.whatsapp && data.whatsapp.trim() !== '') {
+        profile.whatsapp = data.whatsapp
+      }
+      
       setUserProfile(profile)
       
       toast({

@@ -89,12 +89,12 @@ export const registerWithEmailAndPassword = async (userData: RegisterData): Prom
     )
 
     // Create customer profile in Firestore customers collection
-    const customerProfile = {
+    // Only include whatsapp if provided (Firebase doesn't accept undefined)
+    const customerProfile: any = {
       uid: userCredential.user.uid,
       name: userData.name,
       surname: userData.surname,
       phoneNumber: userData.phoneNumber,
-      whatsapp: userData.whatsapp,
       village: userData.village,
       district: userData.district,
       province: userData.province,
@@ -103,6 +103,11 @@ export const registerWithEmailAndPassword = async (userData: RegisterData): Prom
       userType: 'customer',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
+    }
+
+    // Only add whatsapp field if it has a value
+    if (userData.whatsapp && userData.whatsapp.trim() !== '') {
+      customerProfile.whatsapp = userData.whatsapp
     }
 
     await setDoc(doc(db, 'customers', userCredential.user.uid), customerProfile)
